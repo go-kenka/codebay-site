@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>CodeBay – AI 编程会话，不再乱成一团</title>
+
+    <meta
+      name="description"
+      content="CodeBay 是 macOS 原生的 AI 编程 Agent 会话中枢：按项目收好 Claude Code、Codex、OpenCode、DeepSeek、OMP、Pi 的终端会话，用 Git worktree 隔离并行，用提醒告诉你谁在等你。数据留在本机。"
+    />
+    <meta name="author" content="CodeBay" />
+    <meta name="theme-color" content="#08080b" />
+    <link rel="canonical" href="https://go-kenka.github.io/codebay-site/" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="CodeBay – AI 编程会话，不再乱成一团" />
+    <meta
+      property="og:description"
+      content="把 Claude Code、Codex 等 Agent 的会话按项目收好，一个窗口就够了。macOS 原生，Agent 无关，数据留在本机。"
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://go-kenka.github.io/codebay-site/"
+    />
+    <meta
+      property="og:image"
+      content="https://go-kenka.github.io/codebay-site/assets/shots/hero-og.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="2000" />
+    <meta property="og:image:height" content="1172" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="https://go-kenka.github.io/codebay-site/assets/shots/hero-og.png"
+    />
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
+    <link
+      rel="preload"
+      as="image"
+      href="assets/shots/hero.webp"
+      type="image/webp"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="prog" id="prog"></div>
+    <div class="nav">
+      <div class="wrap">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <defs>
+              <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+                <stop stop-color="#a99bff" />
+                <stop offset="1" stop-color="#6b5bff" />
+              </linearGradient>
+            </defs>
+            <rect width="24" height="24" rx="7" fill="url(#lg)" />
+            <path
+              d="M8.5 8.5L5.5 12l3 3.5M15.5 8.5l3 3.5-3 3.5"
+              stroke="#fff"
+              stroke-width="1.8"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            /></svg
+          >CodeBay
+        </div>
+        <a class="btn sm" href="#get">下载</a>
+      </div>
+    </div>
+
+    <header class="hero" id="hero">
+      <div class="beam"></div>
+      <div class="gridbg"></div>
+      <div class="spot"></div>
+      <div class="wrap">
+        <span class="eyebrow"><i></i>原生 macOS</span>
+        <h1>
+          <span class="l">AI 编程会话，</span
+          ><span class="l">不再乱成一团</span>
+        </h1>
+        <p class="lede">
+          CodeBay 把 Claude Code、Codex 等 Agent 的会话按项目收好，用 Git
+          工作树隔离并行，用提醒告诉你谁在等你——一个窗口就够了。
+        </p>
+        <div class="cta">
+          <a class="btn" href="#get">下载 macOS 版</a
+          ><a class="btn ghost" href="#story">看看区别</a>
+        </div>
+      </div>
+      <div class="hint">向下滚动<i></i></div>
+    </header>
+
+    <section class="story" id="story">
+      <div class="pin" id="pin">
+        <div class="cap">
+          <div class="a" id="capA">
+            <small>以前</small>十几个终端，找不到的会话
+          </div>
+          <div class="b" id="capB"><small>现在</small>一个窗口，全部归位</div>
+        </div>
+        <div id="field">
+          <div class="mt" data-x="12" data-y="32" data-r="-8">
+            <div class="mi">
+              <div class="mb">
+                <i></i><i></i><i></i><span>claude · keban</span>
+              </div>
+              <pre>› 帮我排查 grpc 超限…</pre>
+            </div>
+          </div>
+          <div class="mt" data-x="30" data-y="72" data-r="6">
+            <div class="mi">
+              <div class="mb"><i></i><i></i><i></i><span>codex</span></div>
+              <pre>
+$ codex resume
+? 选哪一个…</pre
+              >
+            </div>
+          </div>
+          <div class="mt" data-x="50" data-y="30" data-r="-4">
+            <div class="mi">
+              <div class="mb"><i></i><i></i><i></i><span>opencode</span></div>
+              <pre>› fix login bug</pre>
+            </div>
+          </div>
+          <div class="mt" data-x="72" data-y="70" data-r="9">
+            <div class="mi">
+              <div class="mb">
+                <i></i><i></i><i></i><span>claude --resume</span>
+              </div>
+              <pre>
+No conversation
+found with id</pre
+              >
+            </div>
+          </div>
+          <div class="mt" data-x="88" data-y="34" data-r="-10">
+            <div class="mi">
+              <div class="mb"><i></i><i></i><i></i><span>pi</span></div>
+              <pre>› 重构 trace 模块</pre>
+            </div>
+          </div>
+          <div class="mt" data-x="8" data-y="70" data-r="5">
+            <div class="mi">
+              <div class="mb"><i></i><i></i><i></i><span>zsh</span></div>
+              <pre>~/marketing $ _</pre>
+            </div>
+          </div>
+          <div class="mt" data-x="64" data-y="48" data-r="-6">
+            <div class="mi">
+              <div class="mb">
+                <i></i><i></i><i></i><span>claude · aptos</span>
+              </div>
+              <pre>› 把这个改成 Go</pre>
+            </div>
+          </div>
+          <div class="mt" data-x="36" data-y="48" data-r="4">
+            <div class="mi">
+              <div class="mb"><i></i><i></i><i></i><span>codex</span></div>
+              <pre>› 看下 Doris 慢查询</pre>
+            </div>
+          </div>
+          <div class="mt" data-x="90" data-y="60" data-r="7">
+            <div class="mi">
+              <div class="mb"><i></i><i></i><i></i><span>zsh</span></div>
+              <pre>
+git status
+… 3 files</pre
+              >
+            </div>
+          </div>
+          <div class="mt note" data-x="42" data-y="66" data-r="-4">
+            <div class="mi">上次那个会话在哪？</div>
+          </div>
+          <div class="mt note" data-x="60" data-y="26" data-r="4">
+            <div class="mi">两个 Agent 改了同一个文件？！</div>
+          </div>
+        </div>
+        <div class="shotwrap" id="shot">
+          <div class="frame">
+            <img
+              class="shot"
+              alt="CodeBay 主界面"
+              width="2000"
+              height="1172"
+              src="assets/shots/hero.webp"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <div class="mq rv" aria-hidden="true">
+        <div>
+          <span><i></i>Claude Code</span><span><i></i>Codex</span
+          ><span><i></i>OpenCode</span><span><i></i>DeepSeek</span
+          ><span><i></i>OMP</span><span><i></i>Pi</span
+          ><span><i></i>Claude Code</span><span><i></i>Codex</span
+          ><span><i></i>OpenCode</span><span><i></i>DeepSeek</span
+          ><span><i></i>OMP</span><span><i></i>Pi</span>
+        </div>
+      </div>
+      <div class="sec rv"><h2>每天都少折腾一点</h2></div>
+      <div class="pair rv">
+        <div class="bf">
+          <svg class="ic x" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M6.5 6.5l7 7M13.5 6.5l-7 7" /></svg
+          ><span>十几个终端标签，翻着找那次对话</span>
+        </div>
+        <svg class="ar" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+        <div class="af">
+          <svg class="ic c" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M5.8 10.4l2.8 2.8 5.6-6" /></svg
+          ><span>按项目列出所有会话，点一下接着聊</span>
+        </div>
+      </div>
+      <div class="pair rv">
+        <div class="bf">
+          <svg class="ic x" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M6.5 6.5l7 7M13.5 6.5l-7 7" /></svg
+          ><span>两个 Agent 在同一个目录里改同一批文件</span>
+        </div>
+        <svg class="ar" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+        <div class="af">
+          <svg class="ic c" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M5.8 10.4l2.8 2.8 5.6-6" /></svg
+          ><span>一个分支一份目录，并行互不覆盖</span>
+        </div>
+      </div>
+      <div class="pair rv">
+        <div class="bf">
+          <svg class="ic x" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M6.5 6.5l7 7M13.5 6.5l-7 7" /></svg
+          ><span>会话被清理了，点开才报错</span>
+        </div>
+        <svg class="ar" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+        <div class="af">
+          <svg class="ic c" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M5.8 10.4l2.8 2.8 5.6-6" /></svg
+          ><span>标成不可恢复，不会白启动一次</span>
+        </div>
+      </div>
+      <div class="pair rv">
+        <div class="bf">
+          <svg class="ic x" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M6.5 6.5l7 7M13.5 6.5l-7 7" /></svg
+          ><span>新 Agent 出来，每次都要重新折腾</span>
+        </div>
+        <svg class="ar" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+        <div class="af">
+          <svg class="ic c" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="10" />
+            <path d="M5.8 10.4l2.8 2.8 5.6-6" /></svg
+          ><span>写一份插件 JSON，添加前先实测</span>
+        </div>
+      </div>
+      <div class="sec rv" id="stats"><h2>数字不吹牛</h2></div>
+      <div class="stats rv">
+        <div><b data-n="6" data-d="0">0</b><span>内置 Agent</span></div>
+        <div><b data-n="4" data-d="0">0</b><span>右侧面板</span></div>
+        <div>
+          <b data-n="0.6" data-d="1">0</b><span>秒扫完 371 MB 会话</span>
+        </div>
+        <div><b data-n="2" data-d="0">0</b><span>界面语言</span></div>
+      </div>
+
+      <p class="statsnote">
+        0.6 秒为本机样本：173 个 rollout、371 MB 会话历史。
+      </p>
+      <div class="sec rv" id="uses"><h2>几个日常，少折腾一点</h2></div>
+      <div class="uses rv">
+        <figure class="tc">
+          <blockquote>
+            三个 Agent 各占一个
+            worktree：一个修登录，一个补测试，一个改文档，文件互不覆盖。
+          </blockquote>
+          <figcaption>
+            <span class="av">01</span
+            ><span>并行改造<small>Git worktree</small></span>
+          </figcaption>
+        </figure>
+        <figure class="tc">
+          <blockquote>
+            关掉终端也不丢会话。左栏按项目展开，点一条就恢复；⌘K 直接搜全项目。
+          </blockquote>
+          <figcaption>
+            <span class="av">02</span
+            ><span>找回现场<small>会话索引</small></span>
+          </figcaption>
+        </figure>
+        <figure class="tc">
+          <blockquote>
+            几个仓库共用一条分支，放在同一个组目录里，一次看到全部改动。
+          </blockquote>
+          <figcaption>
+            <span class="av">03</span><span>跨仓库<small>工作树组</small></span>
+          </figcaption>
+        </figure>
+        <figure class="tc">
+          <blockquote>
+            Agent 停下来时提醒你：琥珀标签、提示音、Dock
+            徽标；点通知直接回到那个会话。
+          </blockquote>
+          <figcaption>
+            <span class="av">04</span
+            ><span>离开屏幕<small>注意力中心</small></span>
+          </figcaption>
+        </figure>
+        <figure class="tc">
+          <blockquote>
+            变更按四区分好，行内 / 并排看 diff；AI
+            可以代写提交信息，按不按发送由你。
+          </blockquote>
+          <figcaption>
+            <span class="av">05</span
+            ><span>审阅再提交<small>Git 面板 · AI</small></span>
+          </figcaption>
+        </figure>
+        <figure class="tc">
+          <blockquote>
+            新 CLI 只需一份 JSON 插件；添加前先在本机实测，通过才允许接入。
+          </blockquote>
+          <figcaption>
+            <span class="av">06</span
+            ><span>接入新 Agent<small>JSON 插件 · 实测</small></span>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="sec rv" id="lightmap"><h2>把你的城市点亮</h2></div>
+      <div class="mapcard rv">
+        <canvas id="map" aria-label="世界点阵地图，点击可点亮一个城市"></canvas>
+        <div class="mapbar">
+          <span>点击地图，留下你的光点</span
+          ><span>已点亮 <b id="cnt">0</b> 座城市 · 预置光点为示意数据</span>
+        </div>
+      </div>
+
+      <div class="sec rv" id="faq"><h2>常见问题</h2></div>
+      <div class="faq">
+        <details class="rv">
+          <summary>
+            会改动我的会话文件吗？<svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            不会。CodeBay 只读索引各 Agent
+            的原生会话文件，不复制、不改写；会话的创建与清理由各 CLI 自己负责。
+          </p>
+        </details>
+        <details class="rv">
+          <summary>
+            会上传我的会话或代码吗？<svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            默认不会：没有账号、没有遥测。只有你主动使用内置 AI
+            功能（例如改写提示词、生成提交信息）或从链接导入插件时，才会连接你自己配置的地址。
+          </p>
+        </details>
+        <details class="rv">
+          <summary>
+            支持哪些 Agent？<svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            内置 Claude Code、Codex、OpenCode、DeepSeek、OMP、Pi；其他 Agent
+            可以用一份插件 JSON 接入，添加前会在本机实测。
+          </p>
+        </details>
+        <details class="rv">
+          <summary>
+            多个 Agent 并行会不会互相覆盖？<svg
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            不会。CodeBay 用一个分支一份 Git worktree
+            隔离并行会话；跨仓库任务还可以组成「工作树组」，共用一条分支和同一个目录。
+          </p>
+        </details>
+        <details class="rv">
+          <summary>
+            从 Finder 启动，找不到 claude 命令怎么办？<svg
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            CodeBay 会合成登录 shell 的 PATH，并补上常见安装目录，从 Finder
+            启动也能找到。
+          </p>
+        </details>
+        <details class="rv">
+          <summary>
+            已经被清理的会话还能恢复吗？<svg
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            无法恢复。CodeBay
+            会把它标成不可恢复并说明原因，而不是启动一个注定失败的进程。
+          </p>
+        </details>
+        <details class="rv">
+          <summary>
+            没有 Apple 签名，怎么安装？<svg
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+          </summary>
+          <p>
+            预览版是 ad-hoc 签名，macOS 会提示“无法验证开发者”。安装后在 Finder
+            里右键 CodeBay →「打开」即可；也可以使用
+            <a href="install.sh">install.sh</a>，它会按芯片选择 Apple Silicon 或
+            Intel 安装包，下载、校验、ad-hoc 签名并安装到
+            ~/Applications。这只是测试版的分发方式，不等于正式签名。
+          </p>
+        </details>
+      </div>
+      <section class="final rv" id="get">
+        <h2>把会话收进 CodeBay</h2>
+        <div class="cta">
+          <a
+            class="btn"
+            href="https://github.com/go-kenka/codebay-site/releases/download/v0.1.0/CodeBay-arm64.dmg"
+            >下载 Apple Silicon 版</a
+          >
+          <a
+            class="btn ghost"
+            href="https://github.com/go-kenka/codebay-site/releases/download/v0.1.0/CodeBay-x86_64.dmg"
+            >下载 Intel 版</a
+          >
+          <a class="btn ghost" href="install.sh">安装脚本</a>
+        </div>
+        <p class="soonnote">
+          当前是未签名测试版，Apple Silicon 与 Intel
+          分开编译、不混入同一份二进制。 首次打开请在 Finder 里右键 CodeBay
+          →「打开」；也可以运行
+          <code
+            >curl -fsSL https://go-kenka.github.io/codebay-site/install.sh |
+            bash -s -- --allow-unsigned</code
+          >
+          安装（脚本会按芯片选择安装包、ad-hoc
+          签名并清除隔离属性；仅在你信任该构建时使用）。
+          正式签名与公证版仍在筹备中。
+        </p>
+      </section>
+      <footer>
+        CodeBay · Swift 6 + SwiftUI · macOS 14+ · 数据留在本机 ·
+        <a href="https://github.com/go-kenka/codebay-site">GitHub</a>
+      </footer>
+    </div>
+    <script src="main.js"></script>
+  </body>
+</html>
