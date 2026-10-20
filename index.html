@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>CodeBay – 把并行的 Agent，收进一个工作现场</title>
+    <meta
+      name="description"
+      content="CodeBay 是 macOS 原生的 AI 编程 Agent 会话中枢：按项目收好 Claude Code、Codex、OpenCode、DeepSeek、OMP、Pi 的会话，用 Git worktree 隔离并行，用注意力中心告诉你谁在等你。数据留在本机。"
+    />
+    <meta name="author" content="CodeBay" />
+    <meta name="theme-color" content="#111110" />
+    <link rel="canonical" href="https://go-kenka.github.io/codebay-site/" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="CodeBay – 把并行的 Agent，收进一个工作现场" />
+    <meta
+      property="og:description"
+      content="把 Claude Code、Codex 等 Agent 的会话按项目收好，用 worktree 隔离并行，用注意力中心告诉你谁在等你。macOS 原生，Agent 无关，数据留在本机。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://go-kenka.github.io/codebay-site/" />
+    <meta property="og:image" content="https://go-kenka.github.io/codebay-site/assets/shots/hero-og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="2000" />
+    <meta property="og:image:height" content="1172" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://go-kenka.github.io/codebay-site/assets/shots/hero-og.png" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
+    <link rel="preload" as="image" href="assets/shots/hero.webp" type="image/webp" />
+    <link rel="preload" href="assets/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      document.documentElement.classList.add("js");
+      window.setTimeout(function () {
+        if (!window.__codebayReady) {
+          document.documentElement.classList.add("js-fallback");
+        }
+      }, 3000);
+    </script>
+    <link rel="stylesheet" href="style.css" />
+    <noscript>
+      <style>
+        .nav { background: rgba(17, 17, 16, 0.92); border-bottom-color: var(--line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        .story-section { height: auto; padding: 96px 0; }
+        .story-sticky { position: relative; height: auto; padding-top: 0; }
+        .chaos, .story-cap.cap-before { display: none; }
+        .story-caps, .shot-orbit { opacity: 1; transform: none; }
+        .shot-frame { position: relative; top: auto; left: auto; width: min(1000px, 90vw); margin: 0 auto; opacity: 1; transform: none; }
+        .lamp-line { opacity: 1; transform: none; }
+        .lamp-cone, .lamp-glow { opacity: 0.9; }
+        .hero-title .tg-line { opacity: 1; transform: none; filter: none; }
+      </style>
+    </noscript>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "CodeBay",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS 14+",
+        "description": "macOS 原生的 AI 编程 Agent 会话中枢：按项目组织会话，用 Git worktree 隔离并行，用注意力中心分配等待。",
+        "url": "https://go-kenka.github.io/codebay-site/",
+        "downloadUrl": "https://github.com/go-kenka/codebay-site/releases",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" }
+      }
+    </script>
+  </head>
+  <body id="top">
+    <a class="skip" href="#main">跳到主要内容</a>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h14M12 5.5l6.5 6.5-6.5 6.5" /></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M6.5 10l5.5 5.5L17.5 10M4 20h16" /></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21" /></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2.2 2.2H18.5A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" /></symbol>
+      <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6.5" cy="6" r="2.2" /><circle cx="6.5" cy="18" r="2.2" /><circle cx="18" cy="8" r="2.2" /><path d="M6.5 8.2v7.6M8.7 6H13a5 5 0 0 1 5 5v.2" /></symbol>
+      <symbol id="i-terminal" viewBox="0 0 24 24"><path d="M4 7l4.5 4.5L4 16M11.5 19H20" /></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 5.5-2 6.5-2 6.5h16S18 14.5 18 9" /><path d="M10.2 19.5a2 2 0 0 0 3.6 0" /></symbol>
+      <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5v5h3.6L13 18.5v-13L7.6 9.5z" /><path d="M16.5 9a4.4 4.4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11" /></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v6.2c0 4.6-3.1 7.7-7.5 9.3-4.4-1.6-7.5-4.7-7.5-9.3V6z" /><path d="M8.8 12.2l2.2 2.2 4.4-4.6" /></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M11.5 3l1.7 5 5 1.7-5 1.7-1.7 5-1.7-5-5-1.7 5-1.7z" /><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" /></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.2" /><path d="M5 15V5.5A2.5 2.5 0 0 1 7.5 3H15" /></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6.5 9.5l5.5 5.5 5.5-5.5" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.4 4.4L19 7.5" /></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" /><path d="M12 7.2v5.2l3.2 2" /></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z" /><path d="M13.5 3v5.5H19" /></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.7L12 12.9 3.5 8.2z" /><path d="M3.5 12.2l8.5 4.7 8.5-4.7M3.5 16l8.5 4.7 8.5-4.7" /></symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2.4" /><path d="M10 2.5v3M14 2.5v3M10 18.5v3M14 18.5v3M2.5 10h3M2.5 14h3M18.5 10h3M18.5 14h3" /></symbol>
+      <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6.5" cy="6" r="2.3" /><circle cx="6.5" cy="18" r="2.3" /><circle cx="18" cy="12" r="2.3" /><path d="M6.5 8.3v7.4M8.8 6h2.8a4.4 4.4 0 0 1 4.4 4.4v.2" /></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.2l10.5 6.8L8 18.8z" /></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c3 3.4 3 13.6 0 17M12 3.5c-3 3.4-3 13.6 0 17" /></symbol>
+    </svg>
+
+    <header class="nav" id="nav">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="CodeBay 首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#eeeeec" /><path d="M8.5 8.5L5.5 12l3 3.5M15.5 8.5l3 3.5-3 3.5" stroke="#111110" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </span>
+          <span class="brand-name">CodeBay</span>
+        </a>
+        <nav class="nav-links" id="navLinks" aria-label="主导航">
+          <a href="#control-room">工作现场</a>
+          <a href="#capabilities">能力</a>
+          <a href="#attention">注意力</a>
+          <a href="#faq">常见问题</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-primary btn-sm" href="#get">
+            <span>下载</span>
+            <svg class="ic" aria-hidden="true"><use href="#i-arrow" /></svg>
+          </a>
+          <button class="nav-burger" id="navBurger" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="navLinks">
+            <svg class="ic" aria-hidden="true"><use href="#i-menu" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="hero">
+        <div class="hero-bg" aria-hidden="true">
+          <div class="grid-mesh"></div>
+          <svg class="beams" viewBox="0 0 1440 720" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="beamA" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#eeeeec" stop-opacity="0" />
+                <stop offset="0.45" stop-color="#eeeeec" stop-opacity="0.2" />
+                <stop offset="1" stop-color="#eeeeec" stop-opacity="0" />
+              </linearGradient>
+              <linearGradient id="beamB" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#eeeeec" stop-opacity="0" />
+                <stop offset="0.5" stop-color="#eeeeec" stop-opacity="0.12" />
+                <stop offset="1" stop-color="#eeeeec" stop-opacity="0" />
+              </linearGradient>
+              <linearGradient id="beamC" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#eeeeec" stop-opacity="0" />
+                <stop offset="0.5" stop-color="#eeeeec" stop-opacity="0.08" />
+                <stop offset="1" stop-color="#eeeeec" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <path class="beam beam-a" d="M-80 40C300 140 430 500 900 720" stroke="url(#beamA)" />
+            <path class="beam beam-b" d="M240 -30C520 220 760 380 1520 470" stroke="url(#beamB)" />
+            <path class="beam beam-c" d="M1180 -40C1030 210 830 380 540 760" stroke="url(#beamC)" />
+            <path class="beam beam-a" d="M60 760C330 520 700 460 1500 110" stroke="url(#beamA)" />
+            <path class="beam beam-b" d="M-60 420C280 400 600 120 900 -60" stroke="url(#beamB)" />
+          </svg>
+          <div class="spotlight" id="spotlight"></div>
+          <div class="hero-vignette"></div>
+        </div>
+
+        <div class="hero-inner wrap">
+          <div class="hero-copy">
+            <span class="pill rv" data-rv="0">
+              <span class="pill-spark"><svg class="ic" aria-hidden="true"><use href="#i-spark" /></svg></span>
+              macOS 原生 · SwiftUI
+              <span class="pill-live" aria-hidden="true"></span>
+            </span>
+            <h1 class="hero-title">
+              <span class="sr-only">AI 编程会话，不再乱成一团。</span>
+              <span class="tg" aria-hidden="true">AI 编程会话，</span>
+              <em class="tg grad-text" aria-hidden="true">不再乱成一团</em>
+            </h1>
+            <p class="hero-serif">One window. Six agents. Zero cloud.</p>
+            <p class="hero-lede">
+              把六个 Agent 的会话按项目收好；worktree 隔离并行，琥珀色提醒<span class="nw">谁在等你</span>。数据留在本机。
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary btn-moving magnetic" href="#get">
+                <span class="btn-face">
+                  <svg class="ic" aria-hidden="true"><use href="#i-download" /></svg>
+                  下载 macOS 版
+                </span>
+              </a>
+              <a class="btn btn-ghost" href="#control-room">看看它怎么工作</a>
+            </div>
+            <div class="hero-live rv">
+              <i class="dot dot-amber pulse"></i>
+              <span class="hero-live-label">现在在等你</span>
+              <span class="flip" id="heroFlip" aria-hidden="true"><span>Claude Code</span></span>
+              <span class="hero-live-note">示意</span>
+            </div>
+          </div>
+
+          <div class="hero-visual" id="heroVisual" aria-hidden="true">
+            <div class="shot-glow"></div>
+            <div class="terminal" id="heroTerm">
+              <div class="term-top">
+                <span class="tdot tdot-r"></span><span class="tdot tdot-y"></span><span class="tdot tdot-g"></span>
+                <span class="term-title">codebay — 工作现场</span>
+                <span class="term-demo">示意</span>
+                <span class="term-kbd"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+              </div>
+              <div class="term-tabs">
+                <span class="ttab active"><i class="dot dot-mint"></i>atlas-api · claude</span>
+                <span class="ttab"><i class="dot dot-mint"></i>atlas-api · codex</span>
+                <span class="ttab"><i class="dot dot-amber"></i>nova-web · pi</span>
+                <span class="ttab ttab-add">+</span>
+              </div>
+              <div class="term-body">
+                <div class="term-cwd"><span class="tpath">~/Code/atlas-api</span><span class="tbranch">main</span></div>
+                <div class="term-cmd"><span class="tprompt">›</span> <span id="typeText">修登录、补测试、调研依赖——别让它们互相打架。</span><i class="caret" id="typeCaret"></i></div>
+                <div class="term-rows" id="termRows">
+                  <div class="trow" data-row>
+                    <span class="tstate tstate-run"></span>
+                    <img class="tlogo" src="assets/agents/claudecode.svg" alt="" width="16" height="16" />
+                    <span class="tsess">修登录 · SSO 回调死循环</span>
+                    <span class="ttag ttag-run">运行中</span>
+                  </div>
+                  <div class="trow" data-row>
+                    <span class="tstate tstate-run"></span>
+                    <img class="tlogo" src="assets/agents/codex.svg" alt="" width="16" height="16" />
+                    <span class="tsess">补认证测试 · 三个用例</span>
+                    <span class="ttag ttag-run">运行中</span>
+                  </div>
+                  <div class="trow" data-row>
+                    <span class="tstate tstate-wait"></span>
+                    <img class="tlogo" src="assets/agents/pi.svg" alt="" width="16" height="16" />
+                    <span class="tsess">调研依赖升级 · 等你确认</span>
+                    <span class="ttag ttag-wait">等你确认</span>
+                  </div>
+                </div>
+                <div class="term-foot">
+                  <span><i class="dot dot-mint"></i>2 运行中</span>
+                  <span><i class="dot dot-amber"></i>1 等你确认</span>
+                  <span class="tspacer"></span>
+                  <span class="tfoot-hint">⌘K 找回现场</span>
+                </div>
+              </div>
+            </div>
+            <div class="float-chip chip-1"><span class="kbd">⌘</span><span class="kbd">K</span> 找回现场</div>
+            <div class="float-chip chip-2"><i class="dot dot-mint"></i> worktree · fix-login</div>
+            <div class="float-chip chip-3"><svg class="ic" aria-hidden="true"><use href="#i-clock" /></svg> 0.6s · 371 MB</div>
+          </div>
+        </div>
+
+        <a class="scroll-cue" href="#control-room" aria-label="向下滚动">
+          <span>向下滚</span><i></i>
+        </a>
+      </section>
+
+      <section class="agents-band" aria-label="内置 Agent">
+        <div class="wrap">
+          <div class="band-head rv">
+            <span class="band-label">六个内置适配器 · 一个工作现场</span>
+            <span class="band-note">Agent 会换，工作现场不该换</span>
+          </div>
+        </div>
+        <div class="marquee" id="agentMarquee">
+          <div class="marquee-track">
+            <div class="agent-card"><img src="assets/agents/claudecode.svg" alt="" width="22" height="22" /><div><b>Claude Code</b><small>sessions-index.json · 冷启动约 20 ms</small></div></div>
+            <div class="agent-card"><img src="assets/agents/codex.svg" alt="" width="22" height="22" /><div><b>Codex</b><small>只读 64 KB 文件头，命中再解析</small></div></div>
+            <div class="agent-card"><img src="assets/agents/opencode.svg" alt="" width="22" height="22" /><div><b>OpenCode</b><small>SQLite 只读，不阻塞 CLI 写入</small></div></div>
+            <div class="agent-card"><img src="assets/agents/deepseek.svg" alt="" width="22" height="22" /><div><b>DeepSeek</b><small>profile 启动器 · 环境变量恢复</small></div></div>
+            <div class="agent-card"><img src="assets/agents/omp.svg" alt="" width="22" height="22" /><div><b>OMP</b><small>按 cwd 归属，按 transcript 恢复</small></div></div>
+            <div class="agent-card"><img src="assets/agents/pi.svg" alt="" width="22" height="22" /><div><b>Pi</b><small>按 cwd 归属，按 transcript 恢复</small></div></div>
+            <div class="agent-card agent-card-more"><span class="plus">+</span><div><b>你的 Agent</b><small>一份 JSON 插件，实测通过才接入</small></div></div>
+            <div class="agent-card"><img src="assets/agents/claudecode.svg" alt="" width="22" height="22" /><div><b>Claude Code</b><small>sessions-index.json · 冷启动约 20 ms</small></div></div>
+            <div class="agent-card"><img src="assets/agents/codex.svg" alt="" width="22" height="22" /><div><b>Codex</b><small>只读 64 KB 文件头，命中再解析</small></div></div>
+            <div class="agent-card"><img src="assets/agents/opencode.svg" alt="" width="22" height="22" /><div><b>OpenCode</b><small>SQLite 只读，不阻塞 CLI 写入</small></div></div>
+            <div class="agent-card"><img src="assets/agents/deepseek.svg" alt="" width="22" height="22" /><div><b>DeepSeek</b><small>profile 启动器 · 环境变量恢复</small></div></div>
+            <div class="agent-card"><img src="assets/agents/omp.svg" alt="" width="22" height="22" /><div><b>OMP</b><small>按 cwd 归属，按 transcript 恢复</small></div></div>
+            <div class="agent-card"><img src="assets/agents/pi.svg" alt="" width="22" height="22" /><div><b>Pi</b><small>按 cwd 归属，按 transcript 恢复</small></div></div>
+            <div class="agent-card agent-card-more"><span class="plus">+</span><div><b>你的 Agent</b><small>一份 JSON 插件，实测通过才接入</small></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="story-section" id="control-room">
+        <div class="story-sticky">
+          <div class="wrap story-head">
+            <span class="eyebrow rv">FROM TERMINALS TO ONE WINDOW</span>
+            <h2 class="story-title">
+              <span class="sr-only">以前，十几个终端里找不到那次会话；现在，一个窗口全部归位。</span>
+              <span class="story-caps" aria-hidden="true">
+                <span class="story-cap cap-before"><small>以前</small>十几个终端，<br />找不到那次会话。</span>
+                <span class="story-cap cap-after"><small>现在</small>一个窗口，<br />全部归位。</span>
+              </span>
+            </h2>
+            <p class="story-lede rv">终端还在，只是终于有了目录。</p>
+          </div>
+
+          <div class="story-stage" id="storyStage">
+            <div class="chaos" id="chaos" aria-hidden="true">
+              <div class="chaos-card ct-1" style="--x: 3%; --y: 10%; --r: -7deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>claude · atlas-api</span></div>
+                <pre>› 帮我排查 grpc 超限…</pre>
+              </div>
+              <div class="chaos-card ct-2" style="--x: 18%; --y: 58%; --r: 5deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>codex</span></div>
+                <pre>$ codex resume
+? 选哪一个…</pre>
+              </div>
+              <div class="chaos-card ct-3" style="--x: 38%; --y: 4%; --r: -3deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>opencode</span></div>
+                <pre>› fix login bug</pre>
+              </div>
+              <div class="chaos-card ct-4" style="--x: 50%; --y: 42%; --r: 8deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>claude --resume</span></div>
+                <pre>No conversation
+found with id</pre>
+              </div>
+              <div class="chaos-card ct-5" style="--x: 76%; --y: 12%; --r: -8deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>pi</span></div>
+                <pre>› 重构 trace 模块</pre>
+              </div>
+              <div class="chaos-card ct-6" style="--x: 5%; --y: 70%; --r: 4deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>zsh</span></div>
+                <pre>~/paper-trail $ _</pre>
+              </div>
+              <div class="chaos-card ct-7" style="--x: 70%; --y: 68%; --r: -5deg">
+                <div class="ct-bar"><i></i><i></i><i></i><span>deepseek</span></div>
+                <pre>› 看下 Doris 慢查询</pre>
+              </div>
+              <div class="chaos-card chaos-note" style="--x: 24%; --y: 28%; --r: -3deg">
+                <span>上次那个会话在哪？</span>
+              </div>
+              <div class="chaos-card chaos-note" style="--x: 46%; --y: 82%; --r: 3deg">
+                <span>两个 Agent 改了同一个文件？！</span>
+              </div>
+            </div>
+
+            <div class="shot-frame" id="shotFrame">
+              <div class="shot-chrome">
+                <span class="tdot tdot-r"></span><span class="tdot tdot-y"></span><span class="tdot tdot-g"></span>
+                <span class="shot-url">CodeBay — 界面示意</span>
+                <span class="shot-badge"><i class="dot dot-amber"></i> 1 等你确认</span>
+              </div>
+              <img
+                class="shot-img"
+                alt="CodeBay 主界面示意图：左栏按项目组织会话，中栏运行 Agent，右侧是工作树、文件、Git 与终端 dock"
+                width="2000"
+                height="1172"
+                src="assets/shots/hero.webp"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+
+            <div class="shot-orbit" aria-hidden="true">
+              <span class="orbit-chip oc-1"><i class="dot dot-mint"></i> 3 个标签并行</span>
+              <span class="orbit-chip oc-2"><svg class="ic"><use href="#i-branch" /></svg> worktree</span>
+              <span class="orbit-chip oc-3"><svg class="ic"><use href="#i-git" /></svg> 四区变更</span>
+              <span class="orbit-chip oc-4"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section bento-section" id="capabilities">
+        <div class="wrap">
+          <div class="section-head center">
+            <span class="eyebrow rv">EIGHT HABITS, ONE ROOM</span>
+            <h2 class="rv">八个日常，<span class="serif-accent">一间控制室</span></h2>
+            <p class="rv">看得见、隔得开、回得来。不接管数据，只把并行的现场收拾干净。</p>
+          </div>
+
+          <div class="bento">
+            <article class="bento-card span-2 rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><svg class="ic"><use href="#i-folder" /></svg></span>
+                <div><h3>一个项目，所有会话</h3><p>JSONL、SQLite、zstd 的差异收在适配层；只索引元数据与可恢复性，不复制对话。</p></div>
+              </header>
+              <div class="mock-proj">
+                <div class="proj-head"><svg class="ic chev"><use href="#i-chevron" /></svg><b>atlas-api</b><span class="branch-pill">main</span><span class="live"><i class="dot dot-mint"></i>3 运行中</span></div>
+                <div class="sess-row"><img src="assets/agents/claudecode.svg" alt="" width="16" height="16" /><span class="sess-name">修登录 · SSO 回调死循环</span><span class="sess-meta">Claude Code · 3 分钟前</span><span class="ttag ttag-run">运行中</span></div>
+                <div class="sess-row"><img src="assets/agents/codex.svg" alt="" width="16" height="16" /><span class="sess-name">补认证测试 · 三个用例</span><span class="sess-meta">Codex · 12 分钟前</span><span class="ttag ttag-run">运行中</span></div>
+                <div class="sess-row"><img src="assets/agents/pi.svg" alt="" width="16" height="16" /><span class="sess-name">调研依赖升级</span><span class="sess-meta">Pi · 28 分钟前</span><span class="ttag ttag-wait">等你确认</span></div>
+                <div class="sess-row sess-dim"><img src="assets/agents/deepseek.svg" alt="" width="16" height="16" /><span class="sess-name">grpc 超限分群拉取失败</span><span class="sess-meta">DeepSeek · 2 天前</span><span class="ttag ttag-idle">Transcript is gone</span></div>
+              </div>
+            </article>
+
+            <article class="bento-card span-2 rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><svg class="ic"><use href="#i-branch" /></svg></span>
+                <div><h3>一条分支，一份 checkout</h3><p>三个 Agent 三个目录，互不覆盖；跨仓库还能组成工作树组，共用一条分支。</p></div>
+              </header>
+              <div class="worktree-mock">
+                <div class="wt-root"><svg class="ic"><use href="#i-folder" /></svg> .worktrees/</div>
+                <div class="wt-branches">
+                  <div class="wt-node"><span class="wt-line"></span><b>t1/</b><span class="wt-branch">feat/login</span><span class="wt-agent"><i class="dot dot-mint"></i>claude</span></div>
+                  <div class="wt-node"><span class="wt-line"></span><b>t2/</b><span class="wt-branch">feat/tests</span><span class="wt-agent"><i class="dot dot-mint"></i>codex</span></div>
+                  <div class="wt-node"><span class="wt-line"></span><b>t3/</b><span class="wt-branch">chore/docs</span><span class="wt-agent"><i class="dot dot-amber"></i>pi</span></div>
+                </div>
+                <div class="wt-foot">同一个仓库 · 三份 checkout · 互不踩踏</div>
+              </div>
+            </article>
+
+            <article class="bento-card rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico card-ico-amber"><i class="dot dot-amber pulse"></i></span>
+                <div><h3>等待，是有颜色的</h3><p>琥珀 = 等你确认。读终端标题判断状态，不装 hook。</p></div>
+              </header>
+              <div class="wait-card">
+                <span class="wait-ring"></span>
+                <b>Claude 在等你确认</b>
+                <small>阈值默认 8 秒 · 可调 3–60 秒</small>
+                <div class="wait-channels"><span>琥珀标签</span><span>提示音</span><span>Dock</span><span>通知</span><span>徽标</span></div>
+              </div>
+            </article>
+
+            <article class="bento-card rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><svg class="ic"><use href="#i-git" /></svg></span>
+                <div><h3>从改完到可提交</h3><p>四区变更、行内 / 并排 diff；AI 可以写提交信息，按不按提交由你。</p></div>
+              </header>
+              <div class="diff-mock">
+                <div class="diff-line"><span class="dl-file">internal/auth/sso.go</span><span class="dl-add">+42</span><span class="dl-del">−7</span></div>
+                <div class="diff-line diff-add"><span>+</span> if state := req.URL.Query().Get("state"); state != "" {</div>
+                <div class="diff-line diff-del"><span>−</span> if req.URL.Query().Get("state") == nil {</div>
+                <div class="diff-line diff-add"><span>+</span>   if err := verify(state, cfg.Secret); err != nil {</div>
+                <div class="diff-commit"><svg class="ic"><use href="#i-spark" /></svg> feat(auth): 支持 SSO 回调与状态校验</div>
+              </div>
+            </article>
+
+            <article class="bento-card span-2 rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+                <div><h3>找回现场，只要一次按键</h3><p>空查询每项目 3 条可恢复会话；查询同时搜会话与文件。↑↓ 选择，↩ 打开。</p></div>
+              </header>
+              <div class="palette-mock">
+                <div class="pal-search"><svg class="ic"><use href="#i-search" /></svg><span>grpc</span><span class="pal-esc">Esc</span></div>
+                <div class="pal-group">会话 · 2</div>
+                <div class="pal-row pal-active"><span class="pal-icon"><svg class="ic"><use href="#i-terminal" /></svg></span><div><b>grpc 超限分群拉取失败</b><small>atlas-api · DeepSeek · 2 天前</small></div><span class="pal-enter">↩</span></div>
+                <div class="pal-row"><span class="pal-icon"><svg class="ic"><use href="#i-terminal" /></svg></span><div><b>grpc 重试策略与超时</b><small>nova-web · Codex · 昨天</small></div></div>
+                <div class="pal-group">文件 · 1</div>
+                <div class="pal-row"><span class="pal-icon"><svg class="ic"><use href="#i-file" /></svg></span><div><b>internal/grpc/client.go</b><small>atlas-api · 128 行</small></div></div>
+              </div>
+            </article>
+
+            <article class="bento-card rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><svg class="ic"><use href="#i-layers" /></svg></span>
+                <div><h3>Agent 无关</h3><p>六个内置适配器，外加任意 JSON 插件，共用一个项目视图。</p></div>
+              </header>
+              <div class="orbit-mock" aria-hidden="true">
+                <span class="orbit-core"><svg class="ic"><use href="#i-cpu" /></svg></span>
+                <span class="orbit-item oi-1" data-tip="Claude Code"><img src="assets/agents/claudecode.svg" alt="" width="18" height="18" /></span>
+                <span class="orbit-item oi-2" data-tip="Codex"><img src="assets/agents/codex.svg" alt="" width="18" height="18" /></span>
+                <span class="orbit-item oi-3" data-tip="OpenCode"><img src="assets/agents/opencode.svg" alt="" width="18" height="18" /></span>
+                <span class="orbit-item oi-4" data-tip="DeepSeek"><img src="assets/agents/deepseek.svg" alt="" width="18" height="18" /></span>
+                <span class="orbit-item oi-5" data-tip="OMP"><img src="assets/agents/omp.svg" alt="" width="18" height="18" /></span>
+                <span class="orbit-item oi-6" data-tip="Pi"><img src="assets/agents/pi.svg" alt="" width="18" height="18" /></span>
+              </div>
+            </article>
+
+            <article class="bento-card rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><svg class="ic"><use href="#i-file" /></svg></span>
+                <div><h3>插件是数据，不是代码</h3><p>一份 JSON 描述 CLI；写 → 检查 → 实测，通过才允许接入。</p></div>
+              </header>
+              <div class="plugin-mock">
+                <div class="plugin-file"><span class="plugin-name">aider.codebayagent</span><span class="plugin-type">JSON</span></div>
+                <div class="plugin-row"><span>可执行文件</span><b>aider</b></div>
+                <div class="plugin-row"><span>恢复参数</span><b>--resume {id}</b></div>
+                <div class="plugin-row"><span>会话目录</span><b>~/.aider/sessions</b></div>
+                <div class="pipeline"><span>写</span><i></i><span>检查</span><i></i><span class="on">实测</span></div>
+              </div>
+            </article>
+
+            <article class="bento-card span-2 card-local rv">
+              <div class="card-spot" aria-hidden="true"></div>
+              <header class="card-head">
+                <span class="card-ico"><svg class="ic"><use href="#i-shield" /></svg></span>
+                <div><h3>数据留在本机</h3><p>默认不联网，无账号、无遥测。索引只存元数据，SQLite 只读；网络只用于你配置的 AI 端点与插件链接。</p></div>
+              </header>
+              <div class="local-grid">
+                <div><svg class="ic"><use href="#i-shield" /></svg><b>无账号 · 无遥测</b><small>只有你主动点击时才会联网</small></div>
+                <div><svg class="ic"><use href="#i-folder" /></svg><b>~/Library/Application Support/CodeBay/</b><small>projects / settings / session-index.sqlite</small></div>
+                <div><svg class="ic"><use href="#i-check" /></svg><b>transcript 留在 Agent 自己的目录</b><small>只借来看一眼，不复制对话</small></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section attention-section" id="attention">
+        <div class="wrap attention-grid">
+          <div class="attention-copy">
+            <span class="eyebrow rv">ATTENTION, NOT POLLING</span>
+            <h2 class="rv">Agent 找人，<br />不是人找 Agent</h2>
+            <p class="rv">每个终端 Agent 都会把状态写进标题。CodeBay 读标题判断谁在等你——不装 hook、不改 shell。</p>
+            <ul class="channel-list rv">
+              <li><span class="ch-ico ch-amber"><i class="dot dot-amber"></i></span><div><b>琥珀标签</b><small>等你回应的会话变琥珀，去看了就清除</small></div></li>
+              <li><span class="ch-ico"><svg class="ic"><use href="#i-volume" /></svg></span><div><b>提示音</b><small>系统 Glass 音，短促、不重复</small></div></li>
+              <li><span class="ch-ico"><svg class="ic"><use href="#i-layers" /></svg></span><div><b>Dock 弹跳</b><small>最不容易错过</small></div></li>
+              <li><span class="ch-ico"><svg class="ic"><use href="#i-bell" /></svg></span><div><b>通知中心</b><small>可选，点击跳回对应会话</small></div></li>
+              <li><span class="ch-ico"><svg class="ic"><use href="#i-spark" /></svg></span><div><b>Dock 徽标</b><small>只统计你还没看到的会话数</small></div></li>
+            </ul>
+            <p class="fine rv">阈值默认 8 秒，可调 3–60 秒；纯 shell 永不提醒，看过的会话不再打扰。</p>
+          </div>
+
+          <div class="attention-demo rv" id="attDemo">
+            <div class="demo-window">
+              <div class="demo-bar">
+                <span class="tdot tdot-r"></span><span class="tdot tdot-y"></span><span class="tdot tdot-g"></span>
+                <span class="demo-title">atlas-api — Claude Code</span>
+                <span class="demo-state" id="demoState"><i class="dot dot-mint"></i><span>运行中</span></span>
+              </div>
+              <div class="demo-body">
+                <div class="demo-term" id="demoTerm">
+                  <div class="dline dim">~/Code/atlas-api <span class="tbranch">main</span></div>
+                  <div class="dline"><span class="tprompt">›</span> 修一下 SSO 回调的死循环，顺便补三个测试</div>
+                  <div class="dline dim" data-demo-line>● 读取 internal/auth/sso.go</div>
+                  <div class="dline dim" data-demo-line>● 修改 4 个文件 · 运行 go test ./internal/auth</div>
+                  <div class="dline dim" data-demo-line>✓ ok internal/auth 0.42s · 3 个测试通过</div>
+                  <div class="dline" data-demo-line id="demoQuestion"><span class="tprompt">?</span> 是否继续安装缺失的依赖？</div>
+                  <div class="dline dline-run" data-demo-line><span class="tstate tstate-run"></span>正在等待你的确认…</div>
+                </div>
+                <div class="demo-dock">
+                  <span class="dock-ico dock-codebay"><img src="assets/logo.png" alt="" width="22" height="22" /><b class="dock-badge" id="dockBadge">1</b></span>
+                  <span class="dock-ico"><svg class="ic"><use href="#i-folder" /></svg></span>
+                  <span class="dock-ico"><svg class="ic"><use href="#i-git" /></svg></span>
+                  <span class="dock-ico"><svg class="ic"><use href="#i-terminal" /></svg></span>
+                  <span class="dock-ico"><svg class="ic"><use href="#i-cpu" /></svg></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="demo-notify" id="demoNotify">
+              <div class="notify-head"><img src="assets/logo.png" alt="" width="18" height="18" /><b>CodeBay</b><small>现在</small><button class="notify-x" id="demoNotifyClose" type="button" aria-label="关闭通知"><svg class="ic"><use href="#i-close" /></svg></button></div>
+              <p><b>Claude Code 在等你确认</b><span>atlas-api · 修登录 · SSO 回调死循环</span></p>
+              <div class="notify-actions"><button type="button" class="notify-go" id="demoGo">去看看</button><button type="button" class="notify-later" id="demoLater">稍后</button></div>
+            </div>
+
+            <div class="demo-channels" aria-hidden="true">
+              <span data-ch="label">琥珀标签</span>
+              <span data-ch="sound">提示音</span>
+              <span data-ch="dock">Dock 弹跳</span>
+              <span data-ch="notify">通知中心</span>
+              <span data-ch="badge">Dock 徽标</span>
+            </div>
+
+            <div class="demo-foot">
+              <button class="demo-replay" id="demoReplay" type="button"><svg class="ic"><use href="#i-play" /></svg> 重播</button>
+              <span>演示为示意 · 自动循环 · 点「去看看」清除琥珀</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-section" id="numbers">
+        <div class="paper-dots" aria-hidden="true"></div>
+        <div class="wrap">
+          <div class="section-head center">
+            <span class="eyebrow rv">RECORD / 2026-09</span>
+            <h2 class="rv">数字不吹牛</h2>
+            <p class="paper-serif rv">Recorded, not marketed.</p>
+            <p class="rv">本机样本，条件写在每个数字下面。</p>
+          </div>
+          <div class="stat-grid">
+            <div class="stat rv">
+              <b class="stat-num" data-count="0.6" data-dec="1" data-suffix=" s">0.6 s</b>
+              <span class="stat-label">扫完 371 MB 会话</span>
+              <small>173 个 rollout · 9.1s → 0.6s</small>
+            </div>
+            <div class="stat rv">
+              <b class="stat-num" data-count="0" data-dec="0" data-suffix=" %">0 %</b>
+              <span class="stat-label">空闲 CPU</span>
+              <small>watcher 空闲限流，运行期间不重扫</small>
+            </div>
+            <div class="stat rv">
+              <b class="stat-num" data-count="280" data-dec="0" data-prefix="≈" data-suffix=" MB">≈280 MB</b>
+              <span class="stat-label">物理占用</span>
+              <small>常驻堆约 25.6 MB · Release 本机样本</small>
+            </div>
+            <div class="stat rv">
+              <b class="stat-num" data-count="6" data-dec="0">6</b>
+              <span class="stat-label">内置 Agent 适配器</span>
+              <small>Claude Code · Codex · OpenCode · DeepSeek · OMP · Pi</small>
+            </div>
+            <div class="stat rv">
+              <b class="stat-num" data-count="781" data-dec="0" data-suffix=" × 2">781 × 2</b>
+              <span class="stat-label">条界面文案</span>
+              <small>中英两套，立即切换；键集合由测试钉死</small>
+            </div>
+            <div class="stat rv">
+              <b class="stat-num" data-count="8" data-dec="0" data-suffix=" s">8 s</b>
+              <span class="stat-label">注意力安静阈值</span>
+              <small>可调 3–60 秒；纯 shell 永不提醒</small>
+            </div>
+          </div>
+          <p class="stat-note rv">另有约 4.6 万行自研 Swift、55 个测试源文件与 39 个离屏 UI 场景。</p>
+        </div>
+      </section>
+
+      <section class="section map-section" id="cities">
+        <div class="wrap">
+          <div class="section-head center">
+            <span class="eyebrow rv">LIGHT UP YOUR CITY</span>
+            <h2 class="rv">把你的城市点亮</h2>
+            <p class="rv">点击陆地，留下你的光点。预置光点为示意数据。</p>
+          </div>
+          <div class="map-shell rv">
+            <canvas id="map" width="1440" height="560" role="img" aria-label="世界点阵地图，点击陆地可以点亮一个城市光点"></canvas>
+            <noscript><p class="map-noscript">地图交互需要 JavaScript。CodeBay 没有服务器节点，地图只是示意。</p></noscript>
+            <div class="map-glow" aria-hidden="true"></div>
+            <div class="map-bar">
+              <span class="map-hint"><svg class="ic"><use href="#i-globe" /></svg> 示意地图 · 没有服务器节点</span>
+              <button class="map-random" id="mapRandom" type="button"><svg class="ic"><use href="#i-spark" /></svg> 随机点亮一座城市</button>
+              <span class="map-count">已点亮 <b id="cnt">14</b> 座城市</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section start-section" id="start">
+        <div class="wrap">
+          <div class="section-head center">
+            <span class="eyebrow rv">THREE STEPS</span>
+            <h2 class="rv">三步开始</h2>
+          </div>
+          <ol class="steps">
+            <li class="step rv">
+              <span class="step-num">01</span>
+              <div class="step-body">
+                <span class="step-kbd">DMG / install.sh</span>
+                <h3>安装并打开</h3>
+                <p>下载 DMG 或运行 install.sh；首次打开请右键「打开」。</p>
+              </div>
+            </li>
+            <li class="step rv">
+              <span class="step-num">02</span>
+              <div class="step-body">
+                <span class="step-kbd"><span class="kbd">⌘</span><span class="kbd">O</span></span>
+                <h3>添加项目</h3>
+                <p>选一个代码目录，索引已有会话；Agent CLI 需自行安装并登录。</p>
+              </div>
+            </li>
+            <li class="step rv">
+              <span class="step-num">03</span>
+              <div class="step-body">
+                <span class="step-kbd"><span class="kbd">⇧</span><span class="kbd">⌘</span><span class="kbd">N</span> / <span class="kbd">⌘</span><span class="kbd">K</span></span>
+                <h3>开始，或者恢复</h3>
+                <p>一句话可同时交给几个 Agent；关掉窗口也不丢会话。</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section faq-section" id="faq">
+        <div class="wrap faq-wrap">
+          <div class="faq-head">
+            <span class="eyebrow rv">FAQ</span>
+            <h2 class="rv">常见问题</h2>
+            <p class="rv">装之前，先把边界说清楚。</p>
+            <a class="faq-more rv" href="https://github.com/go-kenka/codebay-site/issues">还有别的问题？到 GitHub 开 issue <svg class="ic" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </div>
+          <div class="faq-list" id="faqList">
+            <div class="faq-item open rv">
+              <button class="faq-q" type="button" aria-expanded="true">
+                <span>会改动我的会话文件吗？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>不会。只读索引各 Agent 的原生会话文件，不复制、不改写；会话由各 CLI 自己管理。扫描 SQLite 只读，表名列名先校验再引用。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>会上传我的会话或代码吗？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>默认不会：没有账号、没有遥测。只有你主动使用内置 AI 或导入 https 插件时，才会连接你配置的地址。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>支持哪些 Agent？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>内置 Claude Code、Codex、OpenCode、DeepSeek、OMP、Pi 六个适配器；其他 CLI 用一份 JSON 插件接入，添加前会在本机实测。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>多个 Agent 并行会不会互相覆盖？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>不会。一条分支一份 Git worktree；跨仓库任务可组成「工作树组」，共用一条分支与一个目录。这是软隔离，不是安全沙箱。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>从 Finder 启动，找不到 claude 命令怎么办？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>启动时用登录 shell 探测真实 PATH，并叠加常见安装目录；解析不到时会给出带解决方法的错误。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>已经被清理的会话还能恢复吗？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>无法恢复。CodeBay 会标成不可恢复并说明原因（例如 Transcript is gone），而不是启动一个注定失败的进程。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>会接管我的 Git 吗？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>不会。Git 能力止于 commit：没有 push、pull、merge、rebase、PR 或冲突解决编辑器；暂存是文件级，diff 与预览只读。</p></div></div>
+            </div>
+            <div class="faq-item rv">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>没有 Apple 签名，怎么安装？</span><svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+              </button>
+              <div class="faq-a"><div><p>预览版是 ad-hoc 签名，macOS 会提示「无法验证开发者」。首次打开请右键「打开」，或用 <a href="install.sh">install.sh</a> 按芯片选择安装包并完成签名安装。正式签名与公证仍在筹备中。</p></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="get-section" id="get">
+        <div class="lamp" aria-hidden="true">
+          <span class="lamp-line"></span>
+          <span class="lamp-cone"></span>
+          <span class="lamp-glow"></span>
+        </div>
+        <div class="wrap get-inner">
+          <span class="eyebrow rv">GET CODEBAY</span>
+          <h2 class="rv">把会话收进 <span class="serif-accent">CodeBay</span></h2>
+          <p class="get-lede rv">macOS 14+ · 未签名测试版。Apple Silicon 与 Intel 分开编译。</p>
+          <div class="dl-grid">
+            <a class="dl-card rv magnetic" href="https://github.com/go-kenka/codebay-site/releases/download/v0.1.0/CodeBay-arm64.dmg">
+              <span class="dl-ico"><svg class="ic"><use href="#i-download" /></svg></span>
+              <b>Apple Silicon</b>
+              <small>arm64 · DMG</small>
+              <svg class="ic dl-arrow"><use href="#i-arrow" /></svg>
+            </a>
+            <a class="dl-card rv magnetic" href="https://github.com/go-kenka/codebay-site/releases/download/v0.1.0/CodeBay-x86_64.dmg">
+              <span class="dl-ico"><svg class="ic"><use href="#i-download" /></svg></span>
+              <b>Intel</b>
+              <small>x86_64 · DMG</small>
+              <svg class="ic dl-arrow"><use href="#i-arrow" /></svg>
+            </a>
+            <a class="dl-card rv magnetic" href="install.sh">
+              <span class="dl-ico"><svg class="ic"><use href="#i-terminal" /></svg></span>
+              <b>安装脚本</b>
+              <small>自动选芯片 · 校验 · ad-hoc 签名</small>
+              <svg class="ic dl-arrow"><use href="#i-arrow" /></svg>
+            </a>
+          </div>
+          <div class="install-box rv">
+            <code id="installCmd">curl -fsSL https://go-kenka.github.io/codebay-site/install.sh | bash -s -- --allow-unsigned</code>
+            <button class="copy-btn" id="copyInstall" type="button"><svg class="ic"><use href="#i-copy" /></svg><span>复制</span></button>
+          </div>
+          <p class="fine rv">脚本按芯片下载、ad-hoc 签名并清除隔离属性；仅在你信任该构建时使用。</p>
+          <div class="get-links rv">
+            <a href="#faq">安装与安全说明</a>
+            <span>·</span>
+            <a href="https://github.com/go-kenka/codebay-site">GitHub</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#eeeeec" /><path d="M8.5 8.5L5.5 12l3 3.5M15.5 8.5l3 3.5-3 3.5" stroke="#111110" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </span>
+            <div>
+              <p class="footer-quote">One developer. A team of agents. One workbench.</p>
+              <p>一个开发者，一支 Agent 团队，<br />一个工作现场。</p>
+            </div>
+          </div>
+          <nav class="footer-links" aria-label="页脚导航">
+            <div><b>产品</b><a href="#control-room">工作现场</a><a href="#capabilities">能力</a><a href="#attention">注意力中心</a><a href="#numbers">数字</a></div>
+            <div><b>获取</b><a href="#get">下载</a><a href="install.sh">安装脚本</a><a href="https://github.com/go-kenka/codebay-site">GitHub</a><a href="#faq">常见问题</a><a href="#top">回到顶部</a></div>
+            <div><b>说明</b><span>Swift 6 + SwiftUI</span><span>macOS 14+</span><span>数据留在本机</span></div>
+          </nav>
+        </div>
+        <p class="footer-word" aria-hidden="true">CODEBAY</p>
+        <div class="footer-bottom">
+          <span>© 2026 CodeBay · 界面截图为开发版</span>
+          <span>本页不加载任何外部 CDN、字体或统计脚本 · 视觉组件灵感来自 <a href="https://ui.aceternity.com/components">Aceternity UI</a></span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,174 @@
+name: Build CodeBay for release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, e.g. 1.0.0"
+        required: true
+        type: string
+      publish:
+        description: "Create / update the GitHub Release"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: codebay-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out CodeBay source
+        uses: actions/checkout@v4
+        with:
+          repository: go-kenka/CodeBay
+          ref: main
+          ssh-key: ${{ secrets.APP_DEPLOY_KEY }}
+          persist-credentials: false
+
+      - name: Record source commit
+        run: |
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+          echo "Source commit: $SOURCE_SHA"
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          xcodegen generate
+
+      - name: Import Developer ID certificate (optional)
+        env:
+          P12: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          if [ -z "$P12" ]; then
+            echo "No DEVELOPER_ID_P12_BASE64 secret; this run will be unsigned."
+            exit 0
+          fi
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import "$RUNNER_TEMP/cert.p12" -k build.keychain -P "$P12_PASSWORD" -A -t cert -f pkcs12
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          security list-keychains -d user -s build.keychain "$HOME/Library/Keychains/login.keychain-db"
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security find-identity -v -p codesigning
+
+      - name: Resolve version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          VERSION="$INPUT_VERSION"
+          if [ -z "$VERSION" ]; then
+            VERSION="$(date +%Y.%m.%d)"
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?([-.][0-9A-Za-z.]+)?$'; then
+            echo "Invalid version: $VERSION" >&2
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Resolved version: $VERSION"
+
+      - name: Build, sign and package
+        env:
+          DEVELOPER_ID_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          CODEBAY_VERSION: ${{ env.VERSION }}
+          CODEBAY_BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          SIGNED=0
+          MODE="preview"
+          if [ -n "$DEVELOPER_ID_P12_BASE64" ] && [ -n "$APPLE_APP_PASSWORD" ]; then
+            xcrun notarytool store-credentials codebay-notary \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_PASSWORD"
+            MODE="signed"
+            SIGNED=1
+          fi
+          rm -f dist/SHA256SUMS
+          for ARCH in arm64 x86_64; do
+            echo "==> Building $ARCH"
+            CODEBAY_ARCH="$ARCH" Scripts/release.sh "$MODE"
+            if [ "$MODE" = "signed" ]; then
+              SRC="dist/CodeBay-$CODEBAY_VERSION-macOS-$ARCH.dmg"
+            else
+              SRC="dist/CodeBay-$CODEBAY_VERSION-macOS-$ARCH-unsigned-preview.dmg"
+            fi
+            cp "$SRC" "dist/CodeBay-$ARCH.dmg"
+          done
+          (cd dist && shasum -a 256 CodeBay-arm64.dmg CodeBay-x86_64.dmg > SHA256SUMS)
+          echo "SIGNED=$SIGNED" >> "$GITHUB_ENV"
+          ls -lh dist/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeBay-${{ env.VERSION }}
+          path: |
+            dist/CodeBay-arm64.dmg
+            dist/CodeBay-x86_64.dmg
+            dist/SHA256SUMS
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ env.VERSION }}
+          SIGNED: ${{ env.SIGNED }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TAG="v$VERSION"
+          if [ "$SIGNED" = "1" ]; then
+            TITLE="CodeBay $VERSION"
+            PRERELEASE=""
+            NOTE="已在 Apple notary 服务公证。"
+          else
+            TITLE="CodeBay ${VERSION}（未签名预览）"
+            PRERELEASE="--prerelease"
+            NOTE="这是未签名构建：macOS 会提示“无法验证开发者”，需要右键 App → 打开，或在系统设置中放行。"
+          fi
+          cat > "$RUNNER_TEMP/notes.md" <<EOF
+          ## CodeBay $VERSION
+
+          $NOTE
+
+          - 构建：$(date -u +"%Y-%m-%d %H:%M UTC")
+          - 源码提交：$SOURCE_SHA
+          - 安装：把对应架构的 CodeBay 拖进「应用程序」。
+          - 架构：Apple Silicon（arm64）与 Intel（x86_64）分开编译、分开打包。
+          - 校验：`shasum -a 256 -c SHA256SUMS`
+          EOF
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/CodeBay-arm64.dmg dist/CodeBay-x86_64.dmg dist/SHA256SUMS --repo "$REPO" --clobber
+          else
+            gh release create "$TAG" dist/CodeBay-arm64.dmg dist/CodeBay-x86_64.dmg dist/SHA256SUMS \
+              --repo "$REPO" \
+              --title "$TITLE" \
+              --notes-file "$RUNNER_TEMP/notes.md" \
+              $PRERELEASE
+          fi
